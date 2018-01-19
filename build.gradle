@@ -1,37 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.1.51'
-    ext {
-        buildToolsVersion = "26.0.2"
-        compileSdkVersion = 26
-        defaultMinSdkVersion = 19
-        defaultTargetSdkVersion = 26
-
-        kotlin_version = "1.1.51"
-        lottie_version = "2.2.0"
-
-        android_support_version = "25.3.1"
-
-        junit_version = "4.12"
-    }
-
-    ext.libraries = [
-            android_appcompat  : "com.android.support:appcompat-v7:$android_support_version",
-            design_support     : "com.android.support:design:$android_support_version",
-            kotlin             : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
-            lottie             : "com.airbnb.android:lottie:$lottie_version",
-
-            // TESTING
-            junit              : "junit:junit:$junit_version"
-    ]
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-rc2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:3.0.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -47,4 +22,8 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.4.1'
 }

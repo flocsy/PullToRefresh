@@ -1,0 +1,76 @@
+buildscript {
+    apply from: "${rootProject.projectDir}/dependencies.gradle"
+
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
+        // Dokka is a documentation engine for Kotlin, performing the same function as javadoc for Java.
+        // Just like Kotlin itself, Dokka fully supports mixed-language Java/Kotlin projects.
+        // It understands standard Javadoc comments in Java files and KDoc comments in Kotlin files,
+        // and can generate documentation in multiple formats including standard Javadoc, HTML
+        // and Markdown.
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
+        classpath "digital.wup:android-maven-publish:${android_maven_publish_version}"
+        // The Gradle Bintray Plugin allows you to publish artifacts to Bintray.
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${gradle_bintray_plugin_version}"
+    }
+}
+
+apply from: "${rootProject.projectDir}/dependencies.gradle"
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'org.jetbrains.dokka-android'
+
+android {
+    buildToolsVersion project.buildToolsVersion
+    compileSdkVersion project.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion project.minSdkVersion
+        targetSdkVersion project.targetSdkVersion
+        versionCode 1
+        versionName pulltorefreshVersion
+        project.version versionName
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+            consumerProguardFiles 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "${buildDir}/javadoc"
+}
+
+dependencies {
+    testImplementation "junit:junit:${junit_version}"
+    androidTestImplementation "junit:junit:${junit_version}"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:${espresso_version}"
+
+    implementation(
+        "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}",
+        "org.jetbrains.kotlin:kotlin-reflect:${kotlin_version}",
+        "com.airbnb.android:lottie:${lottie_version}",
+    )
+}
+
+apply from: 'deploy.gradle'

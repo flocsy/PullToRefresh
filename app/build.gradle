@@ -1,16 +1,25 @@
+buildscript {
+    apply from: "${rootProject.projectDir}/dependencies.gradle"
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
+    }
+}
+
+apply from: "${rootProject.projectDir}/dependencies.gradle"
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    buildToolsVersion project.buildToolsVersion
+    compileSdkVersion project.compileSdkVersion
     defaultConfig {
-        applicationId "com.avandel.pulltorefresh"
-        minSdkVersion 21
-        targetSdkVersion 26
+        applicationId "com.fletech.android.pulltorefresh"
+        minSdkVersion project.minSdkVersion
+        targetSdkVersion project.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -21,19 +30,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':pulltorefresh')
 
-    compile project(':refreshlib')
+    testImplementation "junit:junit:${junit_version}"
 
-    testCompile(libraries.junit)
-
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-
-    compile(
-            libraries.android_appcompat,
-            libraries.kotlin
+    implementation(
+            "com.android.support.constraint:constraint-layout:${constraint_layout_version}",
+            "com.android.support:appcompat-v7:${android_support_version}",
+            "com.android.support:design:${android_support_version}",
+            "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}",
     )
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:${leakcanary_version}"
+    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${leakcanary_version}"
 }

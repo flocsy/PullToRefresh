@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="swipe_refresh" type="id"></item>
+    <item name="pull_to_refresh" type="id"></item>
 </resources>

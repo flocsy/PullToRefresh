@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
-<com.avandel.animationrefresh.PullDownAnimationLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@id/swipe_refresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:lottieAnimation="palm.json">
+    android:orientation="vertical">
 
-    <android.support.v7.widget.RecyclerView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/recyclerView"
+    <com.fletech.android.pulltorefresh.PullDownAnimationLayout
+        android:id="@id/pull_to_refresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
+        app:ptrLottieAnimationAsset="gears.json"
 
-</com.avandel.animationrefresh.PullDownAnimationLayout>
+        app:ptrAutoTriggerRefresh="false"
+        app:ptrContinueAnimationUntilOver="false"
+        app:ptrDragRate="0.5"
+        app:ptrEnablePullWhenRefreshing="true"
+        app:ptrMaxPullHeight="200"
+        app:ptrMaxRetrieveAnimationDuration="400"
+        app:ptrRefreshTriggerHeight="100"
+        app:ptrRetrieveWhenRefreshTriggered="false"
+        app:ptrRetrieveWhenReleased="false"
+        >
+
+        <android.support.v7.widget.RecyclerView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
+
+    </com.fletech.android.pulltorefresh.PullDownAnimationLayout>
+</LinearLayout>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PullDownAnimationLayout">
+        <attr name="ptrLottieAnimationAsset" format="string"/>
+        <attr name="ptrLottieAnimationId" format="reference"/>
+        <attr name="ptrAutoTriggerRefresh" format="boolean"/>
+        <attr name="ptrContinueAnimationUntilOver" format="boolean"/>
+        <attr name="ptrDragRate" format="float"/>
+        <attr name="ptrEnablePullWhenRefreshing" format="boolean"/>
+        <attr name="ptrMaxPullHeight" format="integer"/>
+        <attr name="ptrMaxRetrieveAnimationDuration" format="integer" />
+        <attr name="ptrRefreshTriggerHeight" format="integer"/>
+        <attr name="ptrRetrieveWhenRefreshTriggered" format="boolean"/>
+        <attr name="ptrRetrieveWhenReleased" format="boolean"/>
+    </declare-styleable>
+</resources>

@@ -1,0 +1,19 @@
+ext {
+    pulltorefreshVersion = "0.0.8"
+
+    buildToolsVersion = "26.0.2"
+    compileSdkVersion = 26
+    minSdkVersion = 19
+    targetSdkVersion = 27
+
+    android_maven_publish_version = "3.1.1"
+    android_support_version = "26.1.0"
+    constraint_layout_version = '1.0.2'
+    dokka_version = '0.9.15'
+    espresso_version = "3.0.1"
+    gradle_bintray_plugin_version = '1.8.0'
+    junit_version = "4.12"
+    kotlin_version = "1.2.10"
+    leakcanary_version = '1.5.4'
+    lottie_version = "2.3.0"
+}
