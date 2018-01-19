@@ -12,7 +12,10 @@ buildscript {
         // and can generate documentation in multiple formats including standard Javadoc, HTML
         // and Markdown.
         classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
+
+        // Modification to the standard Maven plugin to be compatible with android-library projects (aar).
         classpath "digital.wup:android-maven-publish:${android_maven_publish_version}"
+
         // The Gradle Bintray Plugin allows you to publish artifacts to Bintray.
         classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${gradle_bintray_plugin_version}"
     }
