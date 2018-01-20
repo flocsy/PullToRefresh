@@ -66,11 +66,10 @@ dokka {
 
 dependencies {
     testImplementation "junit:junit:${junit_version}"
-    androidTestImplementation "junit:junit:${junit_version}"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${espresso_version}"
 
+    api "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
     implementation(
-        "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}",
         "org.jetbrains.kotlin:kotlin-reflect:${kotlin_version}",
         "com.airbnb.android:lottie:${lottie_version}",
     )

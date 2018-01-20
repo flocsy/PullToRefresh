@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.fletech.android.pulltorefresh.androidTest", appContext.getPackageName());
+        assertEquals("com.fletech.android.pulltorefresh.test", appContext.getPackageName());
     }
 }
