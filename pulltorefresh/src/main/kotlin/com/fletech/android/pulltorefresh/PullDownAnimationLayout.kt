@@ -101,8 +101,7 @@ class PullDownAnimationLayout @JvmOverloads
     val canStillScrollUp: ((PullDownAnimationLayout, View?) -> Boolean)? = null
     private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
 
-//    override var onRefreshListener: (() -> Unit)? = null
-    override var onRefreshListener: OnRefreshListener? = null
+    override var onRefreshListener: (() -> Unit)? = null
 
     private var beingDragged: Boolean = false
     private var canRefresh: Boolean = true
@@ -624,8 +623,7 @@ class PullDownAnimationLayout @JvmOverloads
 
     override fun onRefreshStarted() {
         Log.d(TAG, "onRefreshStarted")
-//        onRefreshListener?.invoke()
-        onRefreshListener?.onRefresh()
+        onRefreshListener?.invoke()
         onRefreshContinued()
     }
 

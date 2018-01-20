@@ -46,7 +46,6 @@ dependencies {
             "com.android.support.constraint:constraint-layout:${constraint_layout_version}",
             "com.android.support:appcompat-v7:${android_support_version}",
             "com.android.support:design:${android_support_version}",
-            "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}",
     )
     debugImplementation "com.squareup.leakcanary:leakcanary-android:${leakcanary_version}"
     releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${leakcanary_version}"

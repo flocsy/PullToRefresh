@@ -9,8 +9,7 @@ interface PullDownAnimation {
     val MAX_PULL_HEIGHT_PX: Int
     val REFRESH_TRIGGER_HEIGHT_PX: Int
     val ANIMATION_ASSET_NAME: String
-//    var onRefreshListener: (() -> Unit)?
-    var onRefreshListener: OnRefreshListener?
+    var onRefreshListener: (() -> Unit)?
     fun onRefreshStarted()
     fun onRefreshContinued()
     fun onRefreshFinished()

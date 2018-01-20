@@ -8,7 +8,6 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.LinearSmoothScroller
 import android.util.Log
 import android.view.LayoutInflater
-import com.fletech.android.pulltorefresh.OnRefreshListener
 import com.fletech.android.pulltorefresh.PullDownAnimationLayout
 import com.fletech.android.pulltorefresh.demo.R
 import com.fletech.android.pulltorefresh.demo.adapters.SimpleAdapter
@@ -47,21 +46,17 @@ class MainActivity : AppCompatActivity() {
         smoothScroller.targetPosition = endBound
 
         (findViewById(R.id.pull_to_refresh) as? PullDownAnimationLayout)?.let {
-//            it.onRefreshListener = {
-            it.onRefreshListener = object: OnRefreshListener {
-                override fun onRefresh(): Void? {
-                    Log.d(TAG, "onRefresh")
-                    isRefreshing = true
-                    thread {
-                        sleep(SIMULATED_NETWORK_DELAY * 5)
-                        endBound += 20
-                        dataSource = (startBound..endBound).map { "This is the list item # $it" }
-                        simpleAdapter.dataSource = dataSource
-                        runOnUiThread {
-                            it.onRefreshFinished()
-                        }
+            it.onRefreshListener = {
+                Log.d(TAG, "onRefresh")
+                isRefreshing = true
+                thread {
+                    sleep(SIMULATED_NETWORK_DELAY * 5)
+                    endBound += 20
+                    dataSource = (startBound..endBound).map { "This is the list item # $it" }
+                    simpleAdapter.dataSource = dataSource
+                    runOnUiThread {
+                        it.onRefreshFinished()
                     }
-                    return null
                 }
             }
             it.addAnimatorListener(object: Animator.AnimatorListener {
@@ -82,8 +77,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onAnimationRepeat(animation: Animator?) {}
             })
             if (isRefreshing) {
-//                it.onRefreshListener?.invoke()
-                it.onRefreshListener?.onRefresh()
+                it.onRefreshListener?.invoke()
             }
         }
 
