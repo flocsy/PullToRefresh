@@ -78,4 +78,8 @@ if (file('keystore.gradle').exists()) {
         from javadoc.destinationDir
         // options.encoding = 'UTF-8'
     }
+
+    bintrayUpload.dependsOn build
+    bintrayUpload.dependsOn sourcesJar
+    bintrayUpload.dependsOn javadocJar
 }
