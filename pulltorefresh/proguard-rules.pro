@@ -15,3 +15,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-dontwarn kotlin.reflect.jvm.internal.KClassImpl**
+-dontwarn kotlin.reflect.jvm.internal.impl.protobuf.SmallSortedMap**

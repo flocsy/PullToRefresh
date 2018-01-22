@@ -17,16 +17,28 @@ android {
     buildToolsVersion project.buildToolsVersion
     compileSdkVersion project.compileSdkVersion
     defaultConfig {
-        applicationId "com.fletech.android.pulltorefresh"
+        applicationId "com.fletech.android.pulltorefresh.demo"
         minSdkVersion project.minSdkVersion
         targetSdkVersion project.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        release {
+            storeFile file("release.keystore")
+            storePassword releaseKeystorePassword
+            keyAlias releaseKeystoreAlias
+            keyPassword releaseKeystorePassword
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+            useProguard true
+            minifyEnabled true
+            shrinkResources true
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
