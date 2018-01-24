@@ -18,3 +18,8 @@
 
 -dontwarn kotlin.reflect.jvm.internal.KClassImpl**
 -dontwarn kotlin.reflect.jvm.internal.impl.protobuf.SmallSortedMap**
+
+-dontwarn com.airbnb.lottie.LottieAnimationView**
+-dontwarn com.fletech.android.pulltorefresh.*
+#-keep,includedescriptorclasses class com.airbnb.lottie.LottieAnimationView { *; }
+#-keep,includedescriptorclasses class com.fletech.android.pulltorefresh.* { *; }

@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+#-printconfiguration config.txt
+
+#-dontnote org.apache.commons.codec.**
+-dontnote android.net.http.*
+-dontnote org.apache.http.params.**
+-dontnote org.apache.http.conn.ConnectTimeoutException
+-dontnote org.apache.http.conn.scheme.**

@@ -24,17 +24,20 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-    signingConfigs {
-        release {
-            storeFile file("release.keystore")
-            storePassword releaseKeystorePassword
-            keyAlias releaseKeystoreAlias
-            keyPassword releaseKeystorePassword
+    def isRelease = file("release.keystore").exists()
+    if (isRelease) {
+        signingConfigs {
+            release {
+                storeFile file("release.keystore")
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeystoreAlias
+                keyPassword releaseKeystorePassword
+            }
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig isRelease ? signingConfigs.release : signingConfigs.debug
             useProguard true
             minifyEnabled true
             shrinkResources true
