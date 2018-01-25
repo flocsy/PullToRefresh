@@ -4,15 +4,21 @@ import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 
 /**
 * Created by flocsy on 2018-01-17.
 */
-class PullDownRefreshAnimationView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+//class PullDownRefreshAnimationView @JvmOverloads constructor(
+//        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+//) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+class PullDownRefreshAnimationView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+        LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
+    constructor(context: Context) : this(context, null)
+
     private var maxPullHeight = 0
     private var refreshTriggerHeight = 0
 
@@ -29,16 +35,12 @@ class PullDownRefreshAnimationView @JvmOverloads constructor(
 
     override fun onPullDownLayout(parent: View, target: View, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         target.let {
-            val height = parent.measuredHeight
             val width = parent.measuredWidth
             val left = parent.paddingLeft
             val top = parent.paddingTop
-            val right = parent.paddingRight
-            val bottom = parent.paddingBottom
+            Log.d("PullDownRefreshAnimView", "onPullDownLayout($changed, $l, $t, $r, $b), parent:{w:$width, l:$left, t:$top}")
 
-            it.layout(left, top + it.top, left + width - right, top + height - bottom + it.top)
-
-            //Our refresh animation is above our first child
+            //Our refresh animation is above parent's first child
             layout(left, -refreshTriggerHeight, width, top)
         }
     }

@@ -6,10 +6,10 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.v4.view.MotionEventCompat
-import android.support.v4.view.ViewCompat
+import android.support.annotation.RequiresApi
 import android.support.v7.widget.TintTypedArray
 import android.util.AttributeSet
 import android.util.Log
@@ -19,11 +19,13 @@ import android.view.MotionEvent.*
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
-import java.lang.Math.*
+import java.lang.Math.abs
+import java.lang.Math.min
 
 /**
  *
  * @author Andre Breton
+ * @author Gavriel Fleischer
  *
  *
  * A Custom PulltoRefresh library which is able to display a Lottie Animation.
@@ -37,15 +39,25 @@ import java.lang.Math.*
  * If the user did not drag long enough the view snaps back to its original position.
  *
  * Customization includes:
- * - The height of the View "DEFAULT_REFRESH_VIEW_HEIGHT"
+ * - The height of the View "MAX_PULL_HEIGHT_DP"
  * - The JSON animation "ANIMATION_ASSET_NAME"
- * - The maximum duration of the resetting animation "DEFAULT_OFFSET_ANIMATION_DURATION"
+ * - The maximum duration of the resetting animation "MAX_OFFSET_ANIMATION_DURATION_MS"
  *
  */
 
-class PullDownAnimationLayout @JvmOverloads
-        constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+//class PullDownAnimationLayout @JvmOverloads
+//        constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
+//            FrameLayout(context, attrs, defStyleAttr, defStyleRes), Animator.AnimatorListener, PullDownAnimation {
+class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
             FrameLayout(context, attrs, defStyleAttr, defStyleRes), Animator.AnimatorListener, PullDownAnimation {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+            this(context, attrs, defStyleAttr, 0)
+    constructor(context: Context, attrs: AttributeSet?) :
+            this(context, attrs, 0)
+    constructor(context: Context) :
+            this(context, null)
+
     private val TAG = javaClass.simpleName
 
     private val EXTRA_SUPER_STATE = javaClass.canonicalName + ".EXTRA_SUPER_STATE"
@@ -98,7 +110,7 @@ class PullDownAnimationLayout @JvmOverloads
     private var currentDragPercent: Float = 0f
 
     //<editor-fold desc="Fields & State Keeping">
-    val canStillScrollUp: ((PullDownAnimationLayout, View?) -> Boolean)? = null
+    private val canStillScrollUp: ((PullDownAnimationLayout, View?) -> Boolean)? = null
     private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
 
     override var onRefreshListener: (() -> Unit)? = null
@@ -326,7 +338,7 @@ class PullDownAnimationLayout @JvmOverloads
             //calculated value to decide how long the reset animation should take
             val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * currentDragPercent).toLong())
 //            val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * (target.top.toFloat() / MAX_PULL_HEIGHT_PX)).toLong())
-            Log.d(TAG, "retrieve: animateProgress:${animateProgress}, animateToStart:${animateToStart}, stopAnimationWhenRetrieved:${stopAnimationWhenRetrieved}, currentDragPercent:${currentDragPercent}, myPercent:${target.top.toFloat() / MAX_PULL_HEIGHT_PX}, target.top:${target.top}, animationDuration:${animationDuration}")
+            Log.d(TAG, "retrieve: animateProgress:$animateProgress, animateToStart:$animateToStart, stopAnimationWhenRetrieved:$stopAnimationWhenRetrieved, currentDragPercent:$currentDragPercent, myPercent:${target.top.toFloat() / MAX_PULL_HEIGHT_PX}, target.top:${target.top}, animationDuration:$animationDuration")
             val animators = mutableListOf<Animator>()
             val targetRetrieveAnimation = ObjectAnimator.ofInt(target, "top", if (animateToStart) 0 else REFRESH_TRIGGER_HEIGHT_PX)
             val retrieveAnimation = if (animateToStart) refreshAnimation.animateToStartPosition() else refreshAnimation.animateToRefreshPosition()
@@ -392,6 +404,11 @@ class PullDownAnimationLayout @JvmOverloads
         return min(scrollTop, MAX_PULL_HEIGHT_PX.toFloat())
     }
 
+// TODO: according to lint we should call performClick from onTouchEvent
+//    override fun performClick(): Boolean {
+//        return super.performClick()
+//    }
+
     override fun onTouchEvent(motionEvent: MotionEvent): Boolean {
         //If the user is still moving the pointer don't respond yet
         if (!beingDragged) {
@@ -404,7 +421,7 @@ class PullDownAnimationLayout @JvmOverloads
             return true
         }
 
-        when (MotionEventCompat.getActionMasked(motionEvent)) {
+        when (motionEvent.actionMasked) {
             ACTION_MOVE -> {
                 if (isAnimating && !ENABLE_PULL_WHEN_REFRESHING) {
                     Log.d(TAG, "onTouchEvent: ACTION_MOVE: isAnimating")
@@ -422,7 +439,7 @@ class PullDownAnimationLayout @JvmOverloads
                 val scrollTop = calculateScrollTop(yDiff)
                 currentDragPercent = scrollTop / MAX_PULL_HEIGHT_PX.toFloat()
 //                currentDragPercent = scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()
-                Log.d(TAG, "onTouchEvent: ACTION_MOVE: yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop1: ${yDiff * DRAG_RATE}, scrollTop2: $scrollTop, currentDragPercent: $currentDragPercent")
+//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop1: ${yDiff * DRAG_RATE}, scrollTop2: $scrollTop, currentDragPercent: $currentDragPercent")
                 if (currentDragPercent < 0) {
                     Log.d(TAG, "onTouchEvent: ACTION_MOVE: currentDragPercent < 0")
                     return false
@@ -430,15 +447,13 @@ class PullDownAnimationLayout @JvmOverloads
                 val boundedDragPercent = min(1f, abs(currentDragPercent))
 //                val boundedDragPercent = min(1f, abs(scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()))
                 val targetY = (MAX_PULL_HEIGHT_PX * boundedDragPercent).toInt()
+//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: targetOffsetTop := ${targetY - currentOffsetTop}, targetY: $targetY, currentOffsetTop: $currentOffsetTop")
                 setTargetOffsetTop(targetY - currentOffsetTop)
 
                 if (!isAnimating) {
                     refreshAnimation.progress = boundedDragPercent
                 }
 
-//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: boundedDragPercent:" + boundedDragPercent)
-//                if (!isRefreshing && AUTO_TRIGGER_REFRESH && boundedDragPercent == 1f) {
-//                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: AUTO_TRIGGER_REFRESH && boundedDragPercent == 1f")
                 if (!isRefreshing && canRefresh && AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX) {
                     Log.d(TAG, "onTouchEvent: ACTION_MOVE: AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX")
                     canRefresh = false
@@ -448,7 +463,7 @@ class PullDownAnimationLayout @JvmOverloads
             }
             ACTION_POINTER_DOWN -> {
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN")
-                activePointerId = motionEvent.getPointerId(MotionEventCompat.getActionIndex(motionEvent))
+                activePointerId = motionEvent.getPointerId(motionEvent.actionIndex)
             }
             ACTION_POINTER_UP -> {
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_UP")
@@ -493,11 +508,11 @@ class PullDownAnimationLayout @JvmOverloads
 
         //Ignore scroll touch events when the user is not on the top of the list
         if (!isEnabled || canChildScrollUp()) {
-            Log.d(TAG, "onInterceptTouchEvent: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) canChildScrollUp() else '?'}")
+            Log.d(TAG, "onInterceptTouchEvent: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) canChildScrollUp().toString() else "?"}")
             return false
         }
 
-        when (MotionEventCompat.getActionMasked(ev)) {
+        when (ev.actionMasked) {
             ACTION_DOWN -> {
                 activePointerId = ev.getPointerId(0)
                 beingDragged = false
@@ -507,7 +522,7 @@ class PullDownAnimationLayout @JvmOverloads
                     return false
                 }
                 initialMotionY = motionY
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN ended: initialMotionY: ${initialMotionY}")
+                Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN ended: initialMotionY: $initialMotionY")
             }
             ACTION_MOVE -> {
                 if (activePointerId == INVALID_POINTER_ID) {
@@ -546,7 +561,7 @@ class PullDownAnimationLayout @JvmOverloads
     }
 
     private fun onSecondaryPointerUp(motionEvent: MotionEvent) {
-        val pointerIndex = MotionEventCompat.getActionIndex(motionEvent)
+        val pointerIndex = motionEvent.actionIndex
         val pointerId = motionEvent.getPointerId(pointerIndex)
         if (pointerId == activePointerId) {
             activePointerId = motionEvent.getPointerId(if (pointerIndex == 0) 1 else 0)
@@ -568,14 +583,30 @@ class PullDownAnimationLayout @JvmOverloads
         canStillScrollUp?.let {
             return it(this, target)
         }
-        return ViewCompat.canScrollVertically(target, -1)
+        return target.canScrollVertically(-1)
+    }
+
+    private fun targetLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        target.let {
+            val height = measuredHeight
+            val width = measuredWidth
+            val left = paddingLeft
+            val top = paddingTop
+            val right = paddingRight
+            val bottom = paddingBottom
+            Log.d(TAG, "targetLayout($changed, $l, $t, $r, $b), parent:{h:$height, w:$width, l:$left, t:$top, r:$right, b:$bottom}")
+
+            it.layout(left, top + it.top, left + width - right, top + height - bottom + it.top)
+        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        Log.d(TAG, "onLayout($changed, $l, $t, $r, $b), beingDragged: $beingDragged, target.top: ${target.top}")
+        targetLayout(changed, l, t, r, b)
         refreshAnimation.onPullDownLayout(this, target, changed, l, t, r, b)
     }
 
-    val animatorListeners: ArrayList<Animator.AnimatorListener> by lazy {
+    private val animatorListeners: ArrayList<Animator.AnimatorListener> by lazy {
         ArrayList<Animator.AnimatorListener>()
     }
 

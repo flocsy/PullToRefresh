@@ -9,9 +9,19 @@ import android.view.ViewGroup
 /**
  * Created by flocsy on 2018-01-12.
  */
-class StaticRefreshAnimationView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+//class StaticRefreshAnimationView @JvmOverloads constructor(
+//        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+//) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+//class StaticRefreshAnimationView(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+//        LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+class StaticRefreshAnimationView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+        LottieRefreshAnimationView(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
+    constructor(context: Context) : this(context, null)
+
+//    init {
+//        Log.d(javaClass.simpleName, "init{}")
+//    }
 
     override fun setup(parent: PullDownAnimation) {
     }
@@ -23,16 +33,6 @@ class StaticRefreshAnimationView @JvmOverloads constructor(
     }
 
     override fun onPullDownLayout(parent: View, target: View, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        target.let {
-            val height = parent.measuredHeight
-            val width = parent.measuredWidth
-            val left = parent.paddingLeft
-            val top = parent.paddingTop
-            val right = parent.paddingRight
-            val bottom = parent.paddingBottom
-
-            it.layout(left, top, left + width - right, top + height - bottom)
-        }
     }
 
     override fun animateToStartPosition(): Animator? {
