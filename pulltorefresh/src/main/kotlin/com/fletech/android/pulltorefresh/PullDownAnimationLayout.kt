@@ -6,10 +6,9 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.RequiresApi
+import android.support.annotation.AttrRes
 import android.support.v7.widget.TintTypedArray
 import android.util.AttributeSet
 import android.util.Log
@@ -45,14 +44,21 @@ import java.lang.Math.min
  *
  */
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 //class PullDownAnimationLayout @JvmOverloads
-//        constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
+//        constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr: Int = 0, @StyleRes defStyleRes: Int = 0) :
 //            FrameLayout(context, attrs, defStyleAttr, defStyleRes), Animator.AnimatorListener, PullDownAnimation {
-class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
-            FrameLayout(context, attrs, defStyleAttr, defStyleRes), Animator.AnimatorListener, PullDownAnimation {
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
-            this(context, attrs, defStyleAttr, 0)
+class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes defStyleAttr: Int) :
+            FrameLayout(context, attrs, defStyleAttr), Animator.AnimatorListener, PullDownAnimation {
+//class PullDownAnimationLayout : FrameLayout, Animator.AnimatorListener, PullDownAnimation {
+//class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int, hack: Boolean) :
+//class PullDownAnimationLayout :
+//            FrameLayout, Animator.AnimatorListener, PullDownAnimation {
+//            FrameLayout(context, attrs, defStyleAttr), Animator.AnimatorListener, PullDownAnimation {
+//    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+//    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
+//            super(context, attrs, defStyleAttr, defStyleRes) { initializeStyledAttributes(attrs) }
+//    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+//            super(context, attrs, defStyleAttr) { initializeStyledAttributes(attrs) }
     constructor(context: Context, attrs: AttributeSet?) :
             this(context, attrs, 0)
     constructor(context: Context) :
@@ -127,6 +133,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAt
 
     init {
         initializeStyledAttributes(attrs)
+
         MAX_PULL_HEIGHT_PX = dpToPx(MAX_PULL_HEIGHT_DP)
         REFRESH_TRIGGER_HEIGHT_PX = dpToPx(REFRESH_TRIGGER_HEIGHT_DP)
 
@@ -136,75 +143,6 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAt
 
         //This ViewGroup does not draw things on the canvas
         setWillNotDraw(false)
-    }
-
-    //Think RecyclerView
-    private val target by lazy {
-        var localView: View = getChildAt(0)
-        for (i in 0..childCount - 1) {
-            val child = getChildAt(i)
-            if (child !== refreshAnimation) {
-                localView = child
-                targetPaddingBottom = localView.paddingBottom
-                targetPaddingLeft = localView.paddingLeft
-                targetPaddingRight = localView.paddingRight
-                targetPaddingTop = localView.paddingTop
-            }
-        }
-        localView
-    }
-
-    private val refreshAnimation: LottieRefreshAnimationView by lazy {
-        (if (ANIMATION_RESOURCE_ID != DEFAULT_ANIMATION_RESOURCE_ID)
-            rootView.findViewById<StaticRefreshAnimationView>(ANIMATION_RESOURCE_ID)
-        else
-            PullDownRefreshAnimationView(context)
-        ).apply {
-            addAnimatorListener(this@PullDownAnimationLayout)
-            loop(true)
-            setup(this@PullDownAnimationLayout)
-        }
-    }
-
-    //<editor-fold desc="Save State">
-    override fun onSaveInstanceState(): Parcelable {
-        val bundle = Bundle()
-        bundle.putParcelable(EXTRA_SUPER_STATE, super.onSaveInstanceState())
-        bundle.putBoolean(EXTRA_IS_REFRESHING, isRefreshing)
-        bundle.putBoolean(EXTRA_LOOP_ANIMATION, loopAnimation)
-        bundle.putInt(EXTRA_TARGET_OFFSET_TOP, currentOffsetTop)
-        return bundle
-    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        if (state is Bundle) {
-            super.onRestoreInstanceState(state.getParcelable<Parcelable>(EXTRA_SUPER_STATE))
-            loopAnimation = state.getBoolean(EXTRA_LOOP_ANIMATION)
-            if (state.getBoolean(EXTRA_IS_REFRESHING)) {
-                post {
-                    setTargetOffsetTop(state.getInt(EXTRA_TARGET_OFFSET_TOP, 0))
-                    onRefreshContinued()
-                }
-            }
-        }
-    }
-
-    //</editor-fold>
-
-    //<editor-fold desc="Setup Functions">
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        checkConditions()
-    }
-
-    /**
-     * Prevent our ViewGroup from having more than one child.
-     */
-    private fun checkConditions() {
-        if (childCount > 1) {
-            throw IllegalStateException("You can attach only one child to the PullDownAnimationLayout!")
-        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -304,6 +242,75 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAt
         val continueStyleableBoolean = R.styleable.PullDownAnimationLayout_ptrContinueAnimationUntilOver
         if (styledAttributes.hasValue(continueStyleableBoolean)) {
             CONTINUE_ANIMATION_UNTIL_OVER = styledAttributes.getBoolean(continueStyleableBoolean, CONTINUE_ANIMATION_UNTIL_OVER)
+        }
+    }
+
+    //Think RecyclerView
+    private val target by lazy {
+        var localView: View = getChildAt(0)
+        for (i in 0..childCount - 1) {
+            val child = getChildAt(i)
+            if (child !== refreshAnimation) {
+                localView = child
+                targetPaddingBottom = localView.paddingBottom
+                targetPaddingLeft = localView.paddingLeft
+                targetPaddingRight = localView.paddingRight
+                targetPaddingTop = localView.paddingTop
+            }
+        }
+        localView
+    }
+
+    private val refreshAnimation: LottieRefreshAnimationView by lazy {
+        (if (ANIMATION_RESOURCE_ID != DEFAULT_ANIMATION_RESOURCE_ID)
+            rootView.findViewById<StaticRefreshAnimationView>(ANIMATION_RESOURCE_ID)
+        else
+            PullDownRefreshAnimationView(context)
+        ).apply {
+            addAnimatorListener(this@PullDownAnimationLayout)
+            loop(true)
+            setup(this@PullDownAnimationLayout)
+        }
+    }
+
+    //<editor-fold desc="Save State">
+    override fun onSaveInstanceState(): Parcelable {
+        val bundle = Bundle()
+        bundle.putParcelable(EXTRA_SUPER_STATE, super.onSaveInstanceState())
+        bundle.putBoolean(EXTRA_IS_REFRESHING, isRefreshing)
+        bundle.putBoolean(EXTRA_LOOP_ANIMATION, loopAnimation)
+        bundle.putInt(EXTRA_TARGET_OFFSET_TOP, currentOffsetTop)
+        return bundle
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state is Bundle) {
+            super.onRestoreInstanceState(state.getParcelable<Parcelable>(EXTRA_SUPER_STATE))
+            loopAnimation = state.getBoolean(EXTRA_LOOP_ANIMATION)
+            if (state.getBoolean(EXTRA_IS_REFRESHING)) {
+                post {
+                    setTargetOffsetTop(state.getInt(EXTRA_TARGET_OFFSET_TOP, 0))
+                    onRefreshContinued()
+                }
+            }
+        }
+    }
+
+    //</editor-fold>
+
+    //<editor-fold desc="Setup Functions">
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        checkConditions()
+    }
+
+    /**
+     * Prevent our ViewGroup from having more than one child.
+     */
+    private fun checkConditions() {
+        if (childCount > 1) {
+            throw IllegalStateException("You can attach only one child to the PullDownAnimationLayout!")
         }
     }
 
