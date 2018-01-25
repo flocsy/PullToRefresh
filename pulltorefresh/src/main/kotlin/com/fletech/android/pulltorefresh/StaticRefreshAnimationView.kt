@@ -19,10 +19,6 @@ class StaticRefreshAnimationView(context: Context, attrs: AttributeSet?, defStyl
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context) : this(context, null)
 
-//    init {
-//        Log.d(javaClass.simpleName, "init{}")
-//    }
-
     override fun setup(parent: PullDownAnimation) {
     }
 

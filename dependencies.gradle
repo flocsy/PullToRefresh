@@ -1,5 +1,5 @@
 ext {
-    pulltorefreshVersion = "0.0.11"
+    pulltorefreshVersion = "0.0.12"
 
     buildToolsVersion = "26.0.2"
     compileSdkVersion = 26
