@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import com.fletech.android.pulltorefresh.PullDownAnimationLayout
 import com.fletech.android.pulltorefresh.demo.R
 import com.fletech.android.pulltorefresh.demo.adapters.SimpleAdapter
+import com.fletech.android.pulltorefresh.demo.utils.SyncPopUpHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(TAG, "onAnimationEnd.runOnUiThread")
                         simpleAdapter.notifyItemRangeInserted(lastEndBound, endBound - lastEndBound)
                         lastEndBound = endBound
-//                    SyncPopUpHelper.showPopUp(mContext, swipe_refresh)
+                        SyncPopUpHelper.showPopUp(mContext, pull_to_refresh)
                         smoothScroller.targetPosition = endBound
                         layoutManager.startSmoothScroll(smoothScroller)
                         isRefreshing = false

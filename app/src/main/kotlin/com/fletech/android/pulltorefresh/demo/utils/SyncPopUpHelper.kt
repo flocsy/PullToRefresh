@@ -29,7 +29,7 @@ class SyncPopUpHelper {
             display.getSize(size)
 
             val popUpWindow = PopupWindow(inflatedView, (size.x / 1.5).toInt() , (size.y / 2.5).toInt(), true)
-            popUpWindow.setBackgroundDrawable(context.resources.getDrawable(R.drawable.popup_bg))
+            popUpWindow.setBackgroundDrawable(context.resources.getDrawable(R.drawable.popup_bg, null))
             popUpWindow.isFocusable = true
             popUpWindow.isOutsideTouchable = true
             popUpWindow.animationStyle = R.style.FadeAnimation
