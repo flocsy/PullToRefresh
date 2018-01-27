@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
                         it.onRefreshFinished()
                     }
                 }
+                null
             }
             it.addAnimatorListener(object: Animator.AnimatorListener {
                 override fun onAnimationEnd(animation: Animator?) {
@@ -67,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(TAG, "onAnimationEnd.runOnUiThread")
                         simpleAdapter.notifyItemRangeInserted(lastEndBound, endBound - lastEndBound)
                         lastEndBound = endBound
-                        SyncPopUpHelper.showPopUp(mContext, pull_to_refresh)
+//                        SyncPopUpHelper.showPopUp(mContext, pull_to_refresh)
                         smoothScroller.targetPosition = endBound
                         layoutManager.startSmoothScroll(smoothScroller)
                         isRefreshing = false

@@ -1,9 +1,10 @@
-package com.fletech.android.pulltorefresh
+package com.fletech.android.pulltorefresh.refreshAnimationView
 
 import android.animation.Animator
 import android.support.annotation.FloatRange
 import android.view.View
 import android.view.ViewGroup
+import com.fletech.android.pulltorefresh.PullDownAnimation
 
 /**
  * Created by flocsy on 12/01/2018.

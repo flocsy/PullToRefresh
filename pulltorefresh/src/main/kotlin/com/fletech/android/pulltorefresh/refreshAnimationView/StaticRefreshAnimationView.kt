@@ -1,19 +1,15 @@
-package com.fletech.android.pulltorefresh
+package com.fletech.android.pulltorefresh.refreshAnimationView
 
 import android.animation.Animator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import com.fletech.android.pulltorefresh.PullDownAnimation
 
 /**
  * Created by flocsy on 2018-01-12.
  */
-//class StaticRefreshAnimationView @JvmOverloads constructor(
-//        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-//) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
-//class StaticRefreshAnimationView(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-//        LottieRefreshAnimationView(context, attrs, defStyleAttr) {
 class StaticRefreshAnimationView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         LottieRefreshAnimationView(context, attrs, defStyleAttr) {
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)

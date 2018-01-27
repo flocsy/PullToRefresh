@@ -7,14 +7,14 @@ Add to the `dependencies {}` section:
 
 in gradle 3 and less:
 
-```compile "com.fletech.android:pulltorefresh:0.0.10"```
+```compile "com.fletech.android:pulltorefresh:0.0.14"```
 
 in gradle 4+:
 
-```api "com.fletech.android:pulltorefresh:0.0.10"```
+```api "com.fletech.android:pulltorefresh:0.0.14"```
 
 
-## XML Examples
+## Examples
 
 Minimal usage in layout/pulltorefresh_activity.xml:
 ```xml
@@ -42,8 +42,55 @@ Minimal usage in layout/pulltorefresh_activity.xml:
     </com.fletech.android.pulltorefresh.PullDownAnimationLayout>
 </LinearLayout>
 ```
+Kotlin
+```kotlin
+class MyActivity : Activity {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (findViewById(R.id.pull_to_refresh) as? PullDownAnimationLayout)?.let {
+            it.onRefreshListener = onRefreshStarted()
+        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        pullDownAnimationLayout.setOnRefreshListener(null)
+    }
+    private fun onRefreshStarted() {
+        thread {
+            // sync in the background
+            sleep(3000)
+            runOnUiThread {
+                // tell pullDownAnimationLayout to stop the animation
+                pullDownAnimationLayout.onRefreshFinished()
+            }
+        }
+        return null
+    }
+}
+```
+Java
+```java
+class MyActivity extends Activity {
+    PullDownAnimationLayout pullDownAnimationLayout;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        pullDownAnimationLayout = findViewById(R.id.pull_to_refresh);
+        pullDownAnimationLayout.setOnRefreshListener(this::onRefreshStarted);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        pullDownAnimationLayout.setOnRefreshListener(null);
+    }
+    private Unit onRefreshStarted() {
+        triggerRefreshAsync();
+        return null;
+    }
+}
+```
 
-The default attributes are:
+## Default attributes are:
 ```xml
 <com.fletech.android.pulltorefresh.PullDownAnimationLayout
     android:id="@id/pull_to_refresh"
@@ -55,14 +102,15 @@ The default attributes are:
     app:ptrContinueAnimationUntilOver="false"
     app:ptrDragRate="0.5"
     app:ptrEnablePullWhenRefreshing="true"
-    app:ptrMaxPullHeight="200"
+    app:ptrMaxPullHeight="0dp"
     app:ptrMaxRetrieveAnimationDuration="400"
-    app:ptrRefreshTriggerHeight="100"
+    app:ptrRefreshTriggerHeight="100dp"
     app:ptrRetrieveWhenRefreshTriggered="false"
     app:ptrRetrieveWhenReleased="false"
     >
 ```
 
+## Advanced examples
 Using an external, static lottie animation (StaticRefreshAnimationView extends LottieAnimationView):
 ```xml
 <com.fletech.android.pulltorefresh.StaticRefreshAnimationView
@@ -90,7 +138,8 @@ interface PullDownAnimation {
     val MAX_PULL_HEIGHT_PX: Int
     val REFRESH_TRIGGER_HEIGHT_PX: Int
     val ANIMATION_ASSET_NAME: String
-    var onRefreshListener: (() -> Unit)?
+    var pullRatio : PullRatio
+    var onRefreshListener: (() -> Unit?)?
     fun onRefreshStarted()
     fun onRefreshContinued()
     fun onRefreshFinished()

@@ -7,9 +7,9 @@
         <attr name="ptrContinueAnimationUntilOver" format="boolean"/>
         <attr name="ptrDragRate" format="float"/>
         <attr name="ptrEnablePullWhenRefreshing" format="boolean"/>
-        <attr name="ptrMaxPullHeight" format="integer"/>
+        <attr name="ptrMaxPullHeight" format="dimension"/>
         <attr name="ptrMaxRetrieveAnimationDuration" format="integer" />
-        <attr name="ptrRefreshTriggerHeight" format="integer"/>
+        <attr name="ptrRefreshTriggerHeight" format="dimension"/>
         <attr name="ptrRetrieveWhenRefreshTriggered" format="boolean"/>
         <attr name="ptrRetrieveWhenReleased" format="boolean"/>
     </declare-styleable>
