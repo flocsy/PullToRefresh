@@ -79,7 +79,13 @@ if (file('keystore.gradle').exists()) {
         // options.encoding = 'UTF-8'
     }
 
+    bintrayUpload.dependsOn 'generatePomFileForAarPublication'
     bintrayUpload.dependsOn build
     bintrayUpload.dependsOn sourcesJar
     bintrayUpload.dependsOn javadocJar
+    tasks.whenTaskAdded { task ->
+        if (task.name == 'generatePomFileForAarPublication') {
+            task.dependsOn ':updateReadme'
+        }
+    }
 }

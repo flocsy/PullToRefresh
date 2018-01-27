@@ -13,7 +13,9 @@ buildscript {
     }
 }
 
-allprojects {
+apply from: "${rootProject.projectDir}/dependencies.gradle"
+
+subprojects {
     repositories {
         google()
         jcenter()
@@ -26,4 +28,23 @@ task clean(type: Delete) {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.4.1'
+}
+
+task updateReadme {
+    group "publishing"
+    description "Updates README.md with the current library version"
+    def versionFile = new File(rootProject.projectDir, "dependencies.gradle")
+    def readmeFile = new File(rootProject.projectDir, "README.md")
+    inputs.files versionFile
+    outputs.file readmeFile
+    doLast {
+        def readmeText = readmeFile.text
+        def updatedReadmeText = readmeText.replaceAll(/"(com\.fletech\.android:pulltorefresh):(\d+\.\d+\.\d+)"/, "\"\$1:$pulltorefreshVersion\"")
+        if (updatedReadmeText != readmeText) {
+            println "Updated version to $pulltorefreshVersion in $readmeFile.name"
+            readmeFile.write(updatedReadmeText)
+        } else {
+            println "$readmeFile.name is up-to-date"
+        }
+    }
 }

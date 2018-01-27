@@ -1,4 +1,4 @@
-package com.fletech.android.pulltorefresh
+package com.fletech.android.pulltorefresh.refreshAnimationView
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
@@ -7,23 +7,19 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.fletech.android.pulltorefresh.PullDownAnimation
 
 /**
 * Created by flocsy on 2018-01-17.
 */
-//class PullDownRefreshAnimationView @JvmOverloads constructor(
-//        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-//) : LottieRefreshAnimationView(context, attrs, defStyleAttr) {
 class PullDownRefreshAnimationView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         LottieRefreshAnimationView(context, attrs, defStyleAttr) {
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context) : this(context, null)
 
-    private var maxPullHeight = 0
     private var refreshTriggerHeight = 0
 
     override fun setup(parent: PullDownAnimation) {
-        maxPullHeight = parent.MAX_PULL_HEIGHT_PX
         refreshTriggerHeight = parent.REFRESH_TRIGGER_HEIGHT_PX
 //        layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         setAnimation(parent.ANIMATION_ASSET_NAME)

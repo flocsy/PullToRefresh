@@ -6,9 +6,10 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.AttrRes
+import android.support.annotation.RequiresApi
 import android.support.v7.widget.TintTypedArray
 import android.util.AttributeSet
 import android.util.Log
@@ -18,6 +19,10 @@ import android.view.MotionEvent.*
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
+import com.fletech.android.pulltorefresh.pullRatio.LogarithmicPullRatio
+import com.fletech.android.pulltorefresh.pullRatio.PullRatio
+import com.fletech.android.pulltorefresh.refreshAnimationView.LottieRefreshAnimationView
+import com.fletech.android.pulltorefresh.refreshAnimationView.PullDownRefreshAnimationView
 import java.lang.Math.abs
 import java.lang.Math.min
 
@@ -38,31 +43,22 @@ import java.lang.Math.min
  * If the user did not drag long enough the view snaps back to its original position.
  *
  * Customization includes:
- * - The height of the View "MAX_PULL_HEIGHT_DP"
+ * - The height of the View "MAX_PULL_HEIGHT_PX"
  * - The JSON animation "ANIMATION_ASSET_NAME"
  * - The maximum duration of the resetting animation "MAX_OFFSET_ANIMATION_DURATION_MS"
  *
  */
 
-//class PullDownAnimationLayout @JvmOverloads
-//        constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr: Int = 0, @StyleRes defStyleRes: Int = 0) :
-//            FrameLayout(context, attrs, defStyleAttr, defStyleRes), Animator.AnimatorListener, PullDownAnimation {
-class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes defStyleAttr: Int) :
-            FrameLayout(context, attrs, defStyleAttr), Animator.AnimatorListener, PullDownAnimation {
-//class PullDownAnimationLayout : FrameLayout, Animator.AnimatorListener, PullDownAnimation {
-//class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int, hack: Boolean) :
-//class PullDownAnimationLayout :
-//            FrameLayout, Animator.AnimatorListener, PullDownAnimation {
-//            FrameLayout(context, attrs, defStyleAttr), Animator.AnimatorListener, PullDownAnimation {
-//    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-//    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
-//            super(context, attrs, defStyleAttr, defStyleRes) { initializeStyledAttributes(attrs) }
-//    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
-//            super(context, attrs, defStyleAttr) { initializeStyledAttributes(attrs) }
-    constructor(context: Context, attrs: AttributeSet?) :
-            this(context, attrs, 0)
-    constructor(context: Context) :
-            this(context, null)
+class PullDownAnimationLayout : FrameLayout, Animator.AnimatorListener, PullDownAnimation {
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    internal constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
+            super(context, attrs, defStyleAttr, defStyleRes) {
+        initialize(attrs)
+    }
+    @JvmOverloads internal constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+            super(context, attrs, defStyleAttr) {
+        initialize(attrs)
+    }
 
     private val TAG = javaClass.simpleName
 
@@ -78,9 +74,9 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private val DEFAULT_CONTINUE_ANIMATION_UNTIL_OVER = false
     private val DEFAULT_DRAG_RATE = .5f
     private val DEFAULT_ENABLE_PULL_WHEN_REFRESHING = true
-    private val DEFAULT_MAX_PULL_HEIGHT_DP = 200 // dp
+    private val DEFAULT_MAX_PULL_HEIGHT_PX = 0
     private val DEFAULT_MAX_OFFSET_ANIMATION_DURATION_MS = 400 // ms
-    private val DEFAULT_REFRESH_TRIGGER_HEIGHT_DP = 100 // dp
+    private val DEFAULT_REFRESH_TRIGGER_HEIGHT_PX = dpToPx(100)
     private val DEFAULT_RETRIEVE_WHEN_REFRESH_TRIGGERED = false
     private val DEFAULT_RETRIEVE_WHEN_RELEASED = false
 
@@ -90,17 +86,12 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private var CONTINUE_ANIMATION_UNTIL_OVER = DEFAULT_CONTINUE_ANIMATION_UNTIL_OVER
     private var DRAG_RATE = DEFAULT_DRAG_RATE
     private var ENABLE_PULL_WHEN_REFRESHING = DEFAULT_ENABLE_PULL_WHEN_REFRESHING
-    private var MAX_PULL_HEIGHT_DP = DEFAULT_MAX_PULL_HEIGHT_DP
+    override var MAX_PULL_HEIGHT_PX = DEFAULT_MAX_PULL_HEIGHT_PX
     private var MAX_OFFSET_ANIMATION_DURATION_MS = DEFAULT_MAX_OFFSET_ANIMATION_DURATION_MS
-    private var REFRESH_TRIGGER_HEIGHT_DP = DEFAULT_REFRESH_TRIGGER_HEIGHT_DP
+    override var REFRESH_TRIGGER_HEIGHT_PX = DEFAULT_REFRESH_TRIGGER_HEIGHT_PX
     private var RETRIEVE_WHEN_REFRESH_TRIGGERED = DEFAULT_RETRIEVE_WHEN_REFRESH_TRIGGERED
     private var RETRIEVE_WHEN_RELEASED = DEFAULT_RETRIEVE_WHEN_RELEASED
-
-    private val ENABLE_DYNAMIC_DRAG_RATE = false
     //</editor-fold>
-
-    override val MAX_PULL_HEIGHT_PX: Int
-    override val REFRESH_TRIGGER_HEIGHT_PX: Int
 
     private var targetPaddingBottom: Int = 0
     private var targetPaddingLeft: Int = 0
@@ -121,7 +112,8 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private val canStillScrollUp: ((PullDownAnimationLayout, View?) -> Boolean)? = null
     private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
 
-    override var onRefreshListener: (() -> Unit)? = null
+    override var pullRatio : PullRatio = LogarithmicPullRatio()
+    override var onRefreshListener: (() -> Unit?)? = null
 
     private var beingDragged: Boolean = false
     private var canRefresh: Boolean = true
@@ -131,11 +123,12 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private var stopAnimationWhenRetrieved = false
     private var loopAnimation = false
 
-    init {
-        initializeStyledAttributes(attrs)
+//    init {
+//        initialize(attrs)
+//    }
 
-        MAX_PULL_HEIGHT_PX = dpToPx(MAX_PULL_HEIGHT_DP)
-        REFRESH_TRIGGER_HEIGHT_PX = dpToPx(REFRESH_TRIGGER_HEIGHT_DP)
+    private fun initialize(attrs: AttributeSet?) {
+        initializeStyledAttributes(attrs)
 
         post {
             refreshAnimation.addViewToParent(this)
@@ -199,9 +192,9 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     @SuppressLint("RestrictedApi")
     private fun initializeMaxPullHeight(styledAttributes: TintTypedArray) {
-        val heightStyleableInt = R.styleable.PullDownAnimationLayout_ptrMaxPullHeight
-        if (styledAttributes.hasValue(heightStyleableInt)) {
-            MAX_PULL_HEIGHT_DP = styledAttributes.getInteger(heightStyleableInt, DEFAULT_MAX_PULL_HEIGHT_DP)
+        val heightStyleableDimension = R.styleable.PullDownAnimationLayout_ptrMaxPullHeight
+        if (styledAttributes.hasValue(heightStyleableDimension)) {
+            MAX_PULL_HEIGHT_PX = styledAttributes.getDimensionPixelSize(heightStyleableDimension, DEFAULT_MAX_PULL_HEIGHT_PX)
         }
     }
 
@@ -215,9 +208,9 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     @SuppressLint("RestrictedApi")
     private fun initializeRefreshTriggerHeight(styledAttributes: TintTypedArray) {
-        val heightStyleableInt = R.styleable.PullDownAnimationLayout_ptrRefreshTriggerHeight
-        if (styledAttributes.hasValue(heightStyleableInt)) {
-            REFRESH_TRIGGER_HEIGHT_DP = styledAttributes.getInteger(heightStyleableInt, DEFAULT_REFRESH_TRIGGER_HEIGHT_DP)
+        val heightStyleableDimension = R.styleable.PullDownAnimationLayout_ptrRefreshTriggerHeight
+        if (styledAttributes.hasValue(heightStyleableDimension)) {
+            REFRESH_TRIGGER_HEIGHT_PX = styledAttributes.getDimensionPixelSize(heightStyleableDimension, DEFAULT_REFRESH_TRIGGER_HEIGHT_PX)
         }
     }
 
@@ -263,7 +256,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     private val refreshAnimation: LottieRefreshAnimationView by lazy {
         (if (ANIMATION_RESOURCE_ID != DEFAULT_ANIMATION_RESOURCE_ID)
-            rootView.findViewById<StaticRefreshAnimationView>(ANIMATION_RESOURCE_ID)
+            rootView.findViewById<LottieRefreshAnimationView>(ANIMATION_RESOURCE_ID)
         else
             PullDownRefreshAnimationView(context)
         ).apply {
@@ -352,8 +345,8 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         if (target.top > 0) {
             //calculated value to decide how long the reset animation should take
             val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * currentDragPercent).toLong())
-//            val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * (target.top.toFloat() / MAX_PULL_HEIGHT_PX)).toLong())
-            Log.d(TAG, "retrieve: animateProgress:$animateProgress, animateToStart:$animateToStart, stopAnimationWhenRetrieved:$stopAnimationWhenRetrieved, currentDragPercent:$currentDragPercent, myPercent:${target.top.toFloat() / MAX_PULL_HEIGHT_PX}, target.top:${target.top}, animationDuration:$animationDuration")
+//            val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * (target.top.toFloat() / REFRESH_TRIGGER_HEIGHT_PX)).toLong())
+            Log.d(TAG, "retrieve: animateProgress:$animateProgress, animateToStart:$animateToStart, stopAnimationWhenRetrieved:$stopAnimationWhenRetrieved, currentDragPercent:$currentDragPercent, myPercent:${target.top.toFloat() / REFRESH_TRIGGER_HEIGHT_PX}, target.top:${target.top}, animationDuration:$animationDuration")
             val animators = mutableListOf<Animator>()
             val targetRetrieveAnimation = ObjectAnimator.ofInt(target, "top", if (animateToStart) 0 else REFRESH_TRIGGER_HEIGHT_PX)
             val retrieveAnimation = if (animateToStart) refreshAnimation.animateToStartPosition() else refreshAnimation.animateToRefreshPosition()
@@ -404,14 +397,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     //<editor-fold desc="Layout Rendering">
 
-    private fun calculateScrollTop(pullY: Float): Float {
-        val scrollTop = if (!ENABLE_DYNAMIC_DRAG_RATE)
-            pullY * DRAG_RATE
-        else
-            MAX_PULL_HEIGHT_PX-(MAX_PULL_HEIGHT_PX.toFloat())/(MAX_PULL_HEIGHT_PX*MAX_PULL_HEIGHT_PX) *
-                (pullY-MAX_PULL_HEIGHT_PX)*(pullY-MAX_PULL_HEIGHT_PX)
-        return min(scrollTop, MAX_PULL_HEIGHT_PX.toFloat())
-    }
+    private fun scrollTop(pullY: Float): Float = pullRatio.scrollTop(pullY)
 
 // TODO: according to lint we should call performClick from onTouchEvent
 //    override fun performClick(): Boolean {
@@ -445,23 +431,20 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 val y = motionEvent.getY(pointerIndex)
 
                 val yDiff = y - initialRelativeMotionY - initialTargetTop
-                val scrollTop = calculateScrollTop(yDiff)
-                currentDragPercent = scrollTop / MAX_PULL_HEIGHT_PX.toFloat()
-//                currentDragPercent = scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()
-//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: y: $y, yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop1: ${yDiff * DRAG_RATE}, scrollTop2: $scrollTop, currentDragPercent: $currentDragPercent")
+                val scrollTop = scrollTop(yDiff)
+                currentDragPercent = scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()
+//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: y: $y, yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop: $scrollTop, currentDragPercent: $currentDragPercent")
                 if (currentDragPercent < 0) {
                     Log.d(TAG, "onTouchEvent: ACTION_MOVE: currentDragPercent < 0")
                     return false
                 }
-                val boundedDragPercent = min(1f, abs(currentDragPercent))
-//                val boundedDragPercent = min(1f, abs(scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()))
-                val targetY = (MAX_PULL_HEIGHT_PX * boundedDragPercent).toInt()
+                val targetY = if (MAX_PULL_HEIGHT_PX > 0) min(MAX_PULL_HEIGHT_PX, scrollTop.toInt()) else scrollTop.toInt()
                 val offsetY = targetY - currentOffsetTop + initialTargetTop
 //                Log.d(TAG, "onTouchEvent: ACTION_MOVE: targetOffsetTop := $offsetY, targetY: $targetY, currentOffsetTop: $currentOffsetTop, initialTargetTop:$initialTargetTop, initialAbsoluteMotionY: $initialAbsoluteMotionY, initialRelativeMotionY: $initialRelativeMotionY, isProgressEnabled: $isProgressEnabled")
                 setTargetOffsetTop(offsetY)
 
                 if (!isAnimating && isProgressEnabled) {
-                    refreshAnimation.progress = boundedDragPercent
+                    refreshAnimation.progress = currentDragPercent % 1f
                 }
 
                 if (!isRefreshing && canRefresh && AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX) {
@@ -485,8 +468,8 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                     return false
                 }
                 val y = motionEvent.getY(motionEvent.findPointerIndex(activePointerId))
-                val overScrollTop = calculateScrollTop(y - initialRelativeMotionY)
-//                Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: yDiff: ${y - initialMotionY} [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], dragRate: ${dragRate(y - initialMotionY)}, scrollTop1: ${(y - initialMotionY) * DRAG_RATE}, scrollTop2: $overScrollTop")
+                val overScrollTop = scrollTop(y - initialRelativeMotionY)
+                Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: yDiff: ${y - initialRelativeMotionY} [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], overScrollTop: $overScrollTop")
                 beingDragged = false
                 if (overScrollTop >= REFRESH_TRIGGER_HEIGHT_PX && !isRefreshing && canRefresh) {
                     Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: overScrollTop=$overScrollTop >= REFRESH_TRIGGER_HEIGHT_PX=$REFRESH_TRIGGER_HEIGHT_PX && !isRefreshing && canRefresh")
