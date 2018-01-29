@@ -6,10 +6,9 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.RequiresApi
+import android.support.annotation.AttrRes
 import android.support.v7.widget.TintTypedArray
 import android.util.AttributeSet
 import android.util.Log
@@ -49,16 +48,12 @@ import java.lang.Math.min
  *
  */
 
-class PullDownAnimationLayout : FrameLayout, Animator.AnimatorListener, PullDownAnimation {
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    internal constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
-            super(context, attrs, defStyleAttr, defStyleRes) {
-        initialize(attrs)
-    }
-    @JvmOverloads internal constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-            super(context, attrs, defStyleAttr) {
-        initialize(attrs)
-    }
+class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes defStyleAttr: Int) :
+        FrameLayout(context, attrs, defStyleAttr), Animator.AnimatorListener, PullDownAnimation {
+    internal constructor(context: Context, attrs: AttributeSet?) :
+            this(context, attrs, 0)
+    internal constructor(context: Context) :
+            this(context, null)
 
     private val TAG = javaClass.simpleName
 
@@ -123,9 +118,9 @@ class PullDownAnimationLayout : FrameLayout, Animator.AnimatorListener, PullDown
     private var stopAnimationWhenRetrieved = false
     private var loopAnimation = false
 
-//    init {
-//        initialize(attrs)
-//    }
+    init {
+        initialize(attrs)
+    }
 
     private fun initialize(attrs: AttributeSet?) {
         initializeStyledAttributes(attrs)
