@@ -114,7 +114,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private var canRefresh: Boolean = true
     private var isRefreshing: Boolean = false
     private var isAnimating: Boolean = false
-    private var isProgressEnabled: Boolean = true
+    private var isProgressEnabled: Boolean = true // used to disable the progress frames when releasing after refresh and animation already finished
     private var stopAnimationWhenRetrieved = false
     private var loopAnimation = false
 
@@ -311,7 +311,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         if (stopAnimationWhenRetrieved) {
             loopAnimation = false
             if (!CONTINUE_ANIMATION_UNTIL_OVER) {
-                Log.d(TAG, "retrieveAnimatorListenerAdapter.onAnimationEnd: !CONTINUE_ANIMATION_UNTIL_OVER")
+                Log.d(TAG, "onRetrieved: !CONTINUE_ANIMATION_UNTIL_OVER")
                 refreshAnimation.pauseAnimation()
             }
         }
@@ -320,8 +320,9 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private val retrieveAnimatorListenerAdapter: AnimatorListenerAdapter by lazy {
         object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
-                isProgressEnabled = !beingDragged
-                Log.d(TAG, "retrieveAnimatorListenerAdapter.onAnimationEnd: stopAnimationWhenRetrieved: $stopAnimationWhenRetrieved, isProgressEnabled = $isProgressEnabled")
+                isProgressEnabled = !beingDragged && !isAnimating
+                Log.d(TAG, "retrieveAnimatorListenerAdapter.onAnimationEnd: stopAnimationWhenRetrieved: $stopAnimationWhenRetrieved, isProgressEnabled = $isProgressEnabled [beingDragged:$beingDragged, isAnimating:$isAnimating]")
+                target.requestLayout()
                 onRetrieved()
             }
 
@@ -359,7 +360,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
             }.start()
         } else {
             Log.d(TAG, "retrieve: target.top <= 0")
-            retrieveAnimatorListenerAdapter.onAnimationEnd(null)
+            onRetrieved()
         }
     }
 
@@ -379,14 +380,12 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     private fun retrieveWithProgressAndStopAnimation() {
-        Log.d(TAG, "retrieveWithProgressAndStopAnimation: isProgressEnabled: $isProgressEnabled")
+        Log.d(TAG, "retrieveWithProgressAndStopAnimation: isAnimating: ${isAnimating}, isProgressEnabled: $isProgressEnabled")
         stopAnimationWhenRetrieved = true
         retrieve(!isAnimating && isProgressEnabled)
     }
 
     private fun dpToPx(dp: Int) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
-
-//    private fun pxToDp(px: Int) = px / resources.displayMetrics.density
 
     //</editor-fold>
 
@@ -402,24 +401,25 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     override fun onTouchEvent(motionEvent: MotionEvent): Boolean {
         //If the user is still moving the pointer don't respond yet
         if (!beingDragged) {
-            Log.d(TAG, "onTouchEvent: !beingDragged")
-            return super.onTouchEvent(motionEvent)
+            val ret = super.onTouchEvent(motionEvent)
+            Log.d(TAG, "onTouchEvent.super => $ret: !beingDragged")
+            return ret
         }
         //Prevent the list from scrolling while a pull to refresh animation is ongoing
         if (isRefreshing && !ENABLE_PULL_WHEN_REFRESHING) {
-            Log.d(TAG, "onTouchEvent: isRefreshing")
+            Log.d(TAG, "onTouchEvent => true: isRefreshing")
             return true
         }
 
         when (motionEvent.actionMasked) {
             ACTION_MOVE -> {
                 if (isAnimating && !ENABLE_PULL_WHEN_REFRESHING) {
-                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: isAnimating")
+                    Log.d(TAG, "onTouchEvent => false: ACTION_MOVE: isAnimating")
                     return false
                 }
                 val pointerIndex = motionEvent.findPointerIndex(activePointerId)
                 if (pointerIndex != 0) {
-                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: pointerIndex != 0")
+                    Log.d(TAG, "onTouchEvent => false: ACTION_MOVE: pointerIndex != 0")
                     return false
                 }
 
@@ -430,7 +430,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 currentDragPercent = scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()
 //                Log.d(TAG, "onTouchEvent: ACTION_MOVE: y: $y, yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop: $scrollTop, currentDragPercent: $currentDragPercent")
                 if (currentDragPercent < 0) {
-                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: currentDragPercent < 0")
+                    Log.d(TAG, "onTouchEvent => false: ACTION_MOVE: currentDragPercent:$currentDragPercent < 0")
                     return false
                 }
                 val targetY = if (MAX_PULL_HEIGHT_PX > 0) min(MAX_PULL_HEIGHT_PX, scrollTop.toInt()) else scrollTop.toInt()
@@ -443,15 +443,15 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 }
 
                 if (!isRefreshing && canRefresh && AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX) {
-                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX")
                     canRefresh = false
+                    Log.d(TAG, "onTouchEvent: ACTION_MOVE: AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX: canRefresh=$canRefresh")
                     onRefreshStarted()
                 }
 //                Log.d(TAG, "onTouchEvent: ACTION_MOVE: ended")
             }
             ACTION_POINTER_DOWN -> {
-                Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN")
                 activePointerId = motionEvent.getPointerId(motionEvent.actionIndex)
+                Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN: activePointerId=$activePointerId")
             }
             ACTION_POINTER_UP -> {
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_UP")
@@ -459,28 +459,32 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
             }
             ACTION_UP, ACTION_CANCEL -> {
                 if (activePointerId == INVALID_POINTER_ID) {
-                    Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: activePointerId == INVALID_POINTER_ID")
+                    Log.d(TAG, "onTouchEvent => false: ACTION_UP, ACTION_CANCEL: activePointerId == INVALID_POINTER_ID:$INVALID_POINTER_ID")
                     return false
                 }
                 val y = motionEvent.getY(motionEvent.findPointerIndex(activePointerId))
                 val overScrollTop = scrollTop(y - initialRelativeMotionY)
-                Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: yDiff: ${y - initialRelativeMotionY} [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], overScrollTop: $overScrollTop")
                 beingDragged = false
+                activePointerId = INVALID_POINTER_ID
+                Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: yDiff: ${y - initialRelativeMotionY} [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], overScrollTop=$overScrollTop, beingDragged=$beingDragged")
                 if (overScrollTop >= REFRESH_TRIGGER_HEIGHT_PX && !isRefreshing && canRefresh) {
-                    Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: overScrollTop=$overScrollTop >= REFRESH_TRIGGER_HEIGHT_PX=$REFRESH_TRIGGER_HEIGHT_PX && !isRefreshing && canRefresh")
+                    Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: overScrollTop:$overScrollTop >= REFRESH_TRIGGER_HEIGHT_PX=$REFRESH_TRIGGER_HEIGHT_PX && !isRefreshing && canRefresh")
                     if (RETRIEVE_WHEN_RELEASED) {
                         retrieveWithAnimationAndContinueAnimation()
                     }
                     onRefreshStarted()
                 } else {
-                    Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: overScrollTop=$overScrollTop < REFRESH_TRIGGER_HEIGHT_PX=$REFRESH_TRIGGER_HEIGHT_PX || isRefreshing=$isRefreshing || !(canRefresh=$canRefresh); isAnimating:$isAnimating")
+                    Log.d(TAG, "onTouchEvent: ACTION_UP, ACTION_CANCEL: overScrollTop:$overScrollTop < REFRESH_TRIGGER_HEIGHT_PX=$REFRESH_TRIGGER_HEIGHT_PX || isRefreshing=$isRefreshing || !(canRefresh=$canRefresh); isAnimating:$isAnimating")
                     if (isAnimating) {
                         retrieveWithAnimationAndContinueAnimation()
                     } else {
                         retrieveWithProgressAndStopAnimation()
                     }
                 }
-                activePointerId = INVALID_POINTER_ID
+                Log.d(TAG, "onTouchEvent => true: ACTION_UP, ACTION_CANCEL: activePointerId=INVALID_POINTER_ID:$INVALID_POINTER_ID")
+            }
+            else -> {
+                Log.d(TAG, "onTouchEvent => true: else: ${motionEvent.actionMasked}")
             }
         }
 
@@ -490,13 +494,13 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         //Prevent the list from scrolling while a pull to refresh animation is ongoing
         if (isRefreshing && !ENABLE_PULL_WHEN_REFRESHING) {
-            Log.d(TAG, "onInterceptTouchEvent: isRefreshing")
+            Log.d(TAG, "onInterceptTouchEvent => true: isRefreshing && !ENABLE_PULL_WHEN_REFRESHING")
             return true
         }
 
         //Ignore scroll touch events when the user is not on the top of the list
         if (!isEnabled || canChildScrollUp()) {
-            Log.d(TAG, "onInterceptTouchEvent: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) canChildScrollUp().toString() else "?"}")
+//            Log.d(TAG, "onInterceptTouchEvent => false: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) "true" else "?"}")
             return false
         }
 
@@ -506,23 +510,23 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 beingDragged = false
                 val motionY = getMotionEventY(ev)
                 if (motionY == -1f) {
-                    Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN: motionY == -1f")
+                    Log.d(TAG, "onInterceptTouchEvent => false: ACTION_DOWN: motionY == -1f, activePointerId=$activePointerId, beingDragged=$beingDragged")
                     return false
                 }
                 initialTargetTop = target.top
                 initialAbsoluteMotionY = motionY
                 initialRelativeMotionY = motionY - target.top
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN ended: initialTargetTop: $initialTargetTop, initialAbsoluteMotionY: $initialAbsoluteMotionY, initialRelativeMotionY: $initialRelativeMotionY")
+                Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_DOWN ended: initialTargetTop=$initialTargetTop, initialAbsoluteMotionY=$initialAbsoluteMotionY, initialRelativeMotionY=$initialRelativeMotionY, activePointerId=$activePointerId, beingDragged=$beingDragged")
             }
             ACTION_MOVE -> {
                 if (activePointerId == INVALID_POINTER_ID) {
-                    Log.d(TAG, "onInterceptTouchEvent: ACTION_MOVE: activePointerId == INVALID_POINTER_ID")
+                    Log.d(TAG, "onInterceptTouchEvent => false: ACTION_MOVE: activePointerId == INVALID_POINTER_ID:$INVALID_POINTER_ID")
                     return false
                 }
 
                 val y = getMotionEventY(ev)
                 if (y == -1f) {
-                    Log.d(TAG, "onInterceptTouchEvent: ACTION_MOVE: y == -1f")
+                    Log.d(TAG, "onInterceptTouchEvent => false: ACTION_MOVE: y == -1f")
                     return false
                 }
 
@@ -531,18 +535,26 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                     beingDragged = true
                     canRefresh = true
                     isProgressEnabled = !isAnimating
-                    Log.d(TAG, "onInterceptTouchEvent: ACTION_MOVE: start dragging: target.top:${target.top}, y: $y, yDiff:$yDiff > touchSlop:$touchSlop && !beingDragged; beingDragged = true, canRefresh = true, isProgressEnabled = $isProgressEnabled")
+//                    isProgressEnabled = !beingDragged && !isAnimating
+//                    if (!isAnimating) {
+//                        Log.w(TAG, "Note: isAnimating:$isAnimating, thus isProgressEnabled=$isProgressEnabled although beingDragged=$beingDragged")
+//                    }
+                    Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_MOVE: start dragging: target.top:${target.top}, y: $y, yDiff:$yDiff > touchSlop:$touchSlop && !beingDragged; beingDragged=$beingDragged, canRefresh=$canRefresh, isProgressEnabled=$isProgressEnabled [isAnimating:$isAnimating]")
+//                } else {
+//                    Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_MOVE: don't drag: yDiff:$yDiff < touchSlop:$touchSlop || beingDragged:$beingDragged [canRefresh:$canRefresh, isProgressEnabled:$isProgressEnabled]")
                 }
-//                Log.d(TAG, "onInterceptTouchEvent: ACTION_MOVE ended")
             }
             ACTION_UP, ACTION_CANCEL -> {
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_UP, ACTION_CANCEL")
                 beingDragged = false
                 activePointerId = INVALID_POINTER_ID
+                Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_UP, ACTION_CANCEL: beingDragged=$beingDragged, activePointerId=INVALID_POINTER_ID:$INVALID_POINTER_ID")
             }
             ACTION_POINTER_UP -> {
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_POINTER_UP")
+                Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_POINTER_UP")
                 onSecondaryPointerUp(ev)
+            }
+            else -> {
+                Log.d(TAG, "onInterceptTouchEvent => $beingDragged: else: ${ev.actionMasked}")
             }
         }
 
@@ -556,6 +568,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         val pointerId = motionEvent.getPointerId(pointerIndex)
         if (pointerId == activePointerId) {
             activePointerId = motionEvent.getPointerId(if (pointerIndex == 0) 1 else 0)
+            Log.d(TAG, "onSecondaryPointerUp: activePointerId=$activePointerId")
         }
     }
 
@@ -571,10 +584,15 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
      * Checks if the list can scroll up vertically.
      */
     private fun canChildScrollUp(): Boolean {
+        var ret: Boolean
         canStillScrollUp?.let {
-            return it(this, target)
+            ret = it(this, target)
+//            Log.d(TAG, "canChildScrollUp: canStillScrollUp = $ret")
+            return ret
         }
-        return target.canScrollVertically(-1)
+        ret = target.canScrollVertically(-1)
+//        Log.d(TAG, "canChildScrollUp: canScrollVertically = $ret")
+        return ret
     }
 
     private fun targetLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -624,7 +642,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     override fun onAnimationStart(animation: Animator?) {
         isAnimating = true
         isProgressEnabled = false
-        Log.d(TAG, "onAnimationStart: isProgressEnabled = $isProgressEnabled")
+        Log.d(TAG, "onAnimationStart: isProgressEnabled = $isProgressEnabled [beingDragged:$beingDragged, isAnimating:$isAnimating]")
         notifyAnimatorListeners("onAnimationStart", animation)
     }
 
@@ -642,6 +660,8 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     override fun onAnimationEnd(animation: Animator?) {
         isAnimating = false
+        isProgressEnabled = !beingDragged
+        Log.d(TAG, "onAnimationEnd: isProgressEnabled = $isProgressEnabled [beingDragged:$beingDragged, isAnimating:$isAnimating]")
         notifyAnimatorListeners("onAnimationEnd", animation)
     }
 
