@@ -31,13 +31,14 @@ class PullDownRefreshAnimationView(context: Context, attrs: AttributeSet?, defSt
 
     override fun onPullDownLayout(parent: View, target: View, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         target.let {
-            val width = parent.measuredWidth
-            val left = parent.paddingLeft
-            val top = parent.paddingTop
-            Log.d("PullDownRefreshAnimView", "onPullDownLayout($changed, $l, $t, $r, $b), parent:{w:$width, l:$left, t:$top}")
+            val pWidth = parent.measuredWidth
+            val pLeft = parent.paddingLeft
+            val pTop = parent.paddingTop
+            val tTop = it.top
+            Log.d("PullDownRefreshAnimView", "onPullDownLayout($changed, $l, $t, $r, $b), parent:{w:$pWidth, l:$pLeft, t:$pTop}, target.top:$tTop")
 
             //Our refresh animation is above parent's first child
-            layout(left, -refreshTriggerHeight, width, top)
+            layout(pLeft, tTop - refreshTriggerHeight, pWidth, tTop + pTop)
         }
     }
 
