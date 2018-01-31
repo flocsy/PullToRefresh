@@ -7,11 +7,11 @@ Add to the `dependencies {}` section:
 
 in gradle 3 and less:
 
-```compile "com.fletech.android:pulltorefresh:0.0.14"```
+```compile "com.fletech.android:pulltorefresh:0.0.16"```
 
 in gradle 4+:
 
-```api "com.fletech.android:pulltorefresh:0.0.14"```
+```api "com.fletech.android:pulltorefresh:0.0.16"```
 
 
 ## Examples

@@ -24,6 +24,7 @@ import com.fletech.android.pulltorefresh.refreshAnimationView.LottieRefreshAnima
 import com.fletech.android.pulltorefresh.refreshAnimationView.PullDownRefreshAnimationView
 import java.lang.Math.abs
 import java.lang.Math.min
+import java.util.*
 
 /**
  *
@@ -55,7 +56,13 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     internal constructor(context: Context) :
             this(context, null)
 
-    private val TAG = javaClass.simpleName
+    companion object {
+        val TAG = PullDownAnimationLayout::class.simpleName
+
+        init {
+            Log.d(TAG, "version: ${BuildConfig.VERSION_NAME}, build time: ${Date(BuildConfig.TIMESTAMP)}")
+        }
+    }
 
     private val EXTRA_SUPER_STATE = javaClass.canonicalName + ".EXTRA_SUPER_STATE"
     private val EXTRA_IS_REFRESHING = javaClass.canonicalName + ".EXTRA_IS_REFRESHING"
@@ -302,11 +309,6 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         }
     }
 
-    private fun setTargetOffsetTop(offset: Int) {
-        target.offsetTopAndBottom(offset)
-        refreshAnimation.offsetTopAndBottom(offset)
-    }
-
     private fun onRetrieved() {
         if (stopAnimationWhenRetrieved) {
             loopAnimation = false
@@ -428,14 +430,14 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 val yDiff = y - initialRelativeMotionY - initialTargetTop
                 val scrollTop = scrollTop(yDiff)
                 currentDragPercent = scrollTop / REFRESH_TRIGGER_HEIGHT_PX.toFloat()
-//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: y: $y, yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop: $scrollTop, currentDragPercent: $currentDragPercent")
+                Log.v(TAG, "onTouchEvent: ACTION_MOVE: y: $y, yDiff: $yDiff [$REFRESH_TRIGGER_HEIGHT_PX, $MAX_PULL_HEIGHT_PX], scrollTop: $scrollTop, currentDragPercent: $currentDragPercent")
                 if (currentDragPercent < 0) {
                     Log.d(TAG, "onTouchEvent => false: ACTION_MOVE: currentDragPercent:$currentDragPercent < 0")
                     return false
                 }
                 val targetY = if (MAX_PULL_HEIGHT_PX > 0) min(MAX_PULL_HEIGHT_PX, scrollTop.toInt()) else scrollTop.toInt()
                 val offsetY = targetY - currentOffsetTop + initialTargetTop
-//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: targetOffsetTop := $offsetY, targetY: $targetY, currentOffsetTop: $currentOffsetTop, initialTargetTop:$initialTargetTop, initialAbsoluteMotionY: $initialAbsoluteMotionY, initialRelativeMotionY: $initialRelativeMotionY, isProgressEnabled: $isProgressEnabled")
+                Log.v(TAG, "onTouchEvent: ACTION_MOVE: targetOffsetTop := $offsetY, targetY: $targetY, currentOffsetTop: $currentOffsetTop, initialTargetTop:$initialTargetTop, initialAbsoluteMotionY: $initialAbsoluteMotionY, initialRelativeMotionY: $initialRelativeMotionY, isProgressEnabled: $isProgressEnabled")
                 setTargetOffsetTop(offsetY)
 
                 if (!isAnimating && isProgressEnabled) {
@@ -447,7 +449,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                     Log.d(TAG, "onTouchEvent: ACTION_MOVE: AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX: canRefresh=$canRefresh")
                     onRefreshStarted()
                 }
-//                Log.d(TAG, "onTouchEvent: ACTION_MOVE: ended")
+                Log.v(TAG, "onTouchEvent: ACTION_MOVE: ended")
             }
             ACTION_POINTER_DOWN -> {
                 activePointerId = motionEvent.getPointerId(motionEvent.actionIndex)
@@ -500,7 +502,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
         //Ignore scroll touch events when the user is not on the top of the list
         if (!isEnabled || canChildScrollUp()) {
-//            Log.d(TAG, "onInterceptTouchEvent => false: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) "true" else "?"}")
+            Log.v(TAG, "onInterceptTouchEvent => false: !(isEnabled=$isEnabled) || canChildScrollUp=${if (isEnabled) "true" else "?"}")
             return false
         }
 
@@ -540,8 +542,8 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 //                        Log.w(TAG, "Note: isAnimating:$isAnimating, thus isProgressEnabled=$isProgressEnabled although beingDragged=$beingDragged")
 //                    }
                     Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_MOVE: start dragging: target.top:${target.top}, y: $y, yDiff:$yDiff > touchSlop:$touchSlop && !beingDragged; beingDragged=$beingDragged, canRefresh=$canRefresh, isProgressEnabled=$isProgressEnabled [isAnimating:$isAnimating]")
-//                } else {
-//                    Log.d(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_MOVE: don't drag: yDiff:$yDiff < touchSlop:$touchSlop || beingDragged:$beingDragged [canRefresh:$canRefresh, isProgressEnabled:$isProgressEnabled]")
+                } else {
+                    Log.v(TAG, "onInterceptTouchEvent => $beingDragged: ACTION_MOVE: don't drag: yDiff:$yDiff < touchSlop:$touchSlop || beingDragged:$beingDragged [canRefresh:$canRefresh, isProgressEnabled:$isProgressEnabled]")
                 }
             }
             ACTION_UP, ACTION_CANCEL -> {
@@ -587,12 +589,18 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         var ret: Boolean
         canStillScrollUp?.let {
             ret = it(this, target)
-//            Log.d(TAG, "canChildScrollUp: canStillScrollUp = $ret")
+            Log.v(TAG, "canChildScrollUp: canStillScrollUp = $ret")
             return ret
         }
         ret = target.canScrollVertically(-1)
-//        Log.d(TAG, "canChildScrollUp: canScrollVertically = $ret")
+        Log.v(TAG, "canChildScrollUp: canScrollVertically = $ret")
         return ret
+    }
+
+    private fun setTargetOffsetTop(offset: Int) {
+        Log.v(TAG, "setTargetOffsetTop: offset:$offset")
+        target.offsetTopAndBottom(offset)
+        refreshAnimation.offsetTopAndBottom(offset)
     }
 
     private fun targetLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -628,7 +636,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     private fun notifyAnimatorListeners(event: String, animator: Animator?) {
-        Log.d(TAG, event)
+        Log.i(TAG, event)
         animatorListeners.onEach { listener -> listener.run {
             when (event) {
                 "onAnimationStart" -> onAnimationStart(animator)
@@ -666,7 +674,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     override fun onRefreshStarted() {
-        Log.d(TAG, "onRefreshStarted")
+        Log.i(TAG, "onRefreshStarted")
         onRefreshListener?.invoke()
         onRefreshContinued()
     }
@@ -682,7 +690,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     // must be called onUiThread or on Looper thread
     override fun onRefreshFinished() {
-        Log.d(TAG, "onRefreshFinished")
+        Log.i(TAG, "onRefreshFinished")
         isRefreshing = false
         retrieveWithAnimationAndStopAnimation()
     }

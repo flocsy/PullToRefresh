@@ -37,6 +37,7 @@ android {
         versionCode 1
         versionName pulltorefreshVersion
         project.version versionName
+        buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

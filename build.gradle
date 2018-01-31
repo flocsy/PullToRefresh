@@ -39,7 +39,7 @@ task updateReadme {
     outputs.file readmeFile
     doLast {
         def readmeText = readmeFile.text
-        def updatedReadmeText = readmeText.replaceAll(/"(com\.fletech\.android:pulltorefresh):(\d+\.\d+\.\d+)"/, "\"\$1:$pulltorefreshVersion\"")
+        def updatedReadmeText = readmeText.replaceAll(/"(com\.fletech\.android:pulltorefresh):(\d+(\.\d+)*)"/, "\"\$1:$pulltorefreshVersion\"")
         if (updatedReadmeText != readmeText) {
             println "Updated version to $pulltorefreshVersion in $readmeFile.name"
             readmeFile.write(updatedReadmeText)
