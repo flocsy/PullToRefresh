@@ -104,6 +104,7 @@ class MyActivity extends Activity {
     app:ptrEnablePullWhenRefreshing="true"
     app:ptrMaxPullHeight="0dp"
     app:ptrMaxRetrieveAnimationDuration="400"
+    app:ptrPullToAnimationPercentRatio="1.0"
     app:ptrRefreshTriggerHeight="100dp"
     app:ptrRetrieveWhenRefreshTriggered="false"
     app:ptrRetrieveWhenReleased="false"

@@ -9,6 +9,7 @@
         <attr name="ptrEnablePullWhenRefreshing" format="boolean"/>
         <attr name="ptrMaxPullHeight" format="dimension"/>
         <attr name="ptrMaxRetrieveAnimationDuration" format="integer" />
+        <attr name="ptrPullToAnimationPercentRatio" format="float"/>
         <attr name="ptrRefreshTriggerHeight" format="dimension"/>
         <attr name="ptrRetrieveWhenRefreshTriggered" format="boolean"/>
         <attr name="ptrRetrieveWhenReleased" format="boolean"/>

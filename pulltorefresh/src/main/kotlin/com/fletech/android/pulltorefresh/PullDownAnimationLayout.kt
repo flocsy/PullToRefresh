@@ -78,6 +78,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private val DEFAULT_ENABLE_PULL_WHEN_REFRESHING = true
     private val DEFAULT_MAX_PULL_HEIGHT_PX = 0
     private val DEFAULT_MAX_OFFSET_ANIMATION_DURATION_MS = 400 // ms
+    private val DEFAULT_PULL_TO_ANIMATION_PERCENT_RATIO = 1f
     private val DEFAULT_REFRESH_TRIGGER_HEIGHT_PX = dpToPx(100)
     private val DEFAULT_RETRIEVE_WHEN_REFRESH_TRIGGERED = false
     private val DEFAULT_RETRIEVE_WHEN_RELEASED = false
@@ -90,6 +91,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     private var ENABLE_PULL_WHEN_REFRESHING = DEFAULT_ENABLE_PULL_WHEN_REFRESHING
     override var MAX_PULL_HEIGHT_PX = DEFAULT_MAX_PULL_HEIGHT_PX
     private var MAX_OFFSET_ANIMATION_DURATION_MS = DEFAULT_MAX_OFFSET_ANIMATION_DURATION_MS
+    private var PULL_TO_ANIMATION_PERCENT_RATIO = DEFAULT_PULL_TO_ANIMATION_PERCENT_RATIO
     override var REFRESH_TRIGGER_HEIGHT_PX = DEFAULT_REFRESH_TRIGGER_HEIGHT_PX
     private var RETRIEVE_WHEN_REFRESH_TRIGGERED = DEFAULT_RETRIEVE_WHEN_REFRESH_TRIGGERED
     private var RETRIEVE_WHEN_RELEASED = DEFAULT_RETRIEVE_WHEN_RELEASED
@@ -149,6 +151,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         initializeEnablePullWhenRefreshing(styledAttributes)
         initializeMaxPullHeight(styledAttributes)
         initializeMaxRetrieveAnimationDuration(styledAttributes)
+        initializePullToAnimationPercentRatio(styledAttributes)
         initializeRefreshTriggerHeight(styledAttributes)
         initializeRetrieveWhenRefreshTriggered(styledAttributes)
         initializeRetrieveWhenReleased(styledAttributes)
@@ -205,6 +208,14 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
         val durationStyleableInt = R.styleable.PullDownAnimationLayout_ptrMaxRetrieveAnimationDuration
         if (styledAttributes.hasValue(durationStyleableInt)) {
             MAX_OFFSET_ANIMATION_DURATION_MS = styledAttributes.getInteger(durationStyleableInt, DEFAULT_MAX_OFFSET_ANIMATION_DURATION_MS)
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun initializePullToAnimationPercentRatio(styledAttributes: TintTypedArray) {
+        val pull2percentStyleableFloat = R.styleable.PullDownAnimationLayout_ptrPullToAnimationPercentRatio
+        if (styledAttributes.hasValue(pull2percentStyleableFloat)) {
+            PULL_TO_ANIMATION_PERCENT_RATIO = styledAttributes.getFloat(pull2percentStyleableFloat, DEFAULT_PULL_TO_ANIMATION_PERCENT_RATIO)
         }
     }
 
@@ -441,7 +452,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 setTargetOffsetTop(offsetY)
 
                 if (!isAnimating && isProgressEnabled) {
-                    refreshAnimation.progress = currentDragPercent % 1f
+                    refreshAnimation.progress = (PULL_TO_ANIMATION_PERCENT_RATIO * currentDragPercent) % 1f
                 }
 
                 if (!isRefreshing && canRefresh && AUTO_TRIGGER_REFRESH && scrollTop >= REFRESH_TRIGGER_HEIGHT_PX) {
