@@ -9,17 +9,17 @@
 
 # Add any project specific keep options here:
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
--dontwarn kotlin.reflect.jvm.internal.KClassImpl**
--dontwarn kotlin.reflect.jvm.internal.impl.protobuf.SmallSortedMap**
-
--dontwarn com.airbnb.lottie.LottieAnimationView**
--dontwarn com.fletech.android.pulltorefresh.*
+# pulltorefresh and lottie
+-dontnote com.airbnb.lottie.LottieAnimationView
+-dontnote com.fletech.android.pulltorefresh.**
 #-keep,includedescriptorclasses class com.airbnb.lottie.LottieAnimationView { *; }
-#-keep,includedescriptorclasses class com.fletech.android.pulltorefresh.* { *; }
+#-keep,includedescriptorclasses class com.fletech.android.pulltorefresh.** { *; }
+
+# kotlin
+-dontwarn kotlin.reflect.jvm.internal.KClassImpl
+-dontwarn kotlin.reflect.jvm.internal.impl.protobuf.SmallSortedMap
+-dontnote kotlin.internal.jdk8.JDK8PlatformImplementations
+-dontnote kotlin.internal.JRE8PlatformImplementations
+-dontnote kotlin.internal.jdk7.JDK7PlatformImplementations
+-dontnote kotlin.internal.JRE7PlatformImplementations
+
