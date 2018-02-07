@@ -1,9 +1,6 @@
 package com.fletech.android.pulltorefresh
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+import android.animation.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -128,6 +125,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     private fun initialize(attrs: AttributeSet?) {
+        Log.v(TAG, "initialize")
         initializeStyledAttributes(attrs)
 
         post {
@@ -254,6 +252,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
             val child = getChildAt(i)
             if (child !== refreshAnimation) {
                 localView = child
+                Log.v(TAG, "findTarget[$i]: child:$child")
             }
         }
         localView
@@ -272,6 +271,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     //<editor-fold desc="Save State">
     override fun onSaveInstanceState(): Parcelable {
+        Log.v(TAG, "onSaveInstanceState")
         val bundle = Bundle()
         bundle.putParcelable(EXTRA_SUPER_STATE, super.onSaveInstanceState())
         bundle.putBoolean(EXTRA_IS_REFRESHING, isRefreshing)
@@ -281,6 +281,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
+        Log.v(TAG, "onRestoreInstanceState")
         if (state is Bundle) {
             super.onRestoreInstanceState(state.getParcelable<Parcelable>(EXTRA_SUPER_STATE))
             loopAnimation = state.getBoolean(EXTRA_LOOP_ANIMATION)
@@ -298,6 +299,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     //<editor-fold desc="Setup Functions">
 
     override fun onAttachedToWindow() {
+        Log.v(TAG, "onAttachedToWindow")
         super.onAttachedToWindow()
         checkConditions()
     }
@@ -370,7 +372,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
             //calculated value to decide how long the reset animation should take
             val animationDuration = abs((MAX_OFFSET_ANIMATION_DURATION_MS * currentDragPercent).toLong())
             val animateProgress = !isAnimating && isProgressEnabled
-            Log.d(TAG, "retrieve: isRetrieving = $isRetrieving, retrieveToStart:$retrieveToStart, animateProgress:$animateProgress, stopAnimationWhenRetrieved:$stopAnimationWhenRetrieved, currentDragPercent:$currentDragPercent, target.top:${target.top}, animationDuration:$animationDuration, isAnimating:$isAnimating, isProgressEnabled:$isProgressEnabled")
+            Log.d(TAG, "retrieve: isRetrieving = $isRetrieving, target.scrollY:${target.scrollY}, retrieveToStart:$retrieveToStart, animateProgress:$animateProgress, stopAnimationWhenRetrieved:$stopAnimationWhenRetrieved, currentDragPercent:$currentDragPercent, target.top:${target.top}, animationDuration:$animationDuration, isAnimating:$isAnimating, isProgressEnabled:$isProgressEnabled")
             val animators = mutableListOf<Animator>()
             retrieveTargetHeight = if (retrieveToStart) 0 else REFRESH_TRIGGER_HEIGHT_PX
             val targetRetrieveAnimation = ObjectAnimator.ofInt(target, "top", retrieveTargetHeight)
@@ -389,7 +391,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
                 start()
             }
         } else {
-            Log.d(TAG, "retrieve: target.top <= 0")
+            Log.d(TAG, "retrieve: target.top:${target.top} <= 0")
             onRetrieved()
         }
     }
@@ -426,7 +428,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
 
     private fun showProgress() {
         if (!isAnimating && isProgressEnabled) {
-            Log.d(TAG, "showProgress: currentDragPercent:$currentDragPercent")
+            Log.v(TAG, "showProgress: currentDragPercent:$currentDragPercent")
             refreshAnimation.progress = (PULL_TO_ANIMATION_PERCENT_RATIO * currentDragPercent) % 1f
         }
     }
@@ -653,7 +655,7 @@ class PullDownAnimationLayout(context: Context, attrs: AttributeSet?, @AttrRes d
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        Log.d(TAG, "onLayout($changed, $l, $t, $r, $b), beingDragged: $beingDragged, target.top: ${target.top}")
+        Log.d(TAG, "onLayout($changed, $l, $t, $r, $b), beingDragged: $beingDragged, target.top: ${target.top}, target.scrollY:${target.scrollY}")
         targetLayout(changed, l, t, r, b)
         refreshAnimation.onPullDownLayout(this, target, changed, l, t, r, b)
         showProgress()
