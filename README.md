@@ -114,7 +114,7 @@ class MyActivity extends Activity {
 ## Advanced examples
 Using an external, static lottie animation (StaticRefreshAnimationView extends LottieAnimationView):
 ```xml
-<com.fletech.android.pulltorefresh.StaticRefreshAnimationView
+<com.fletech.android.pulltorefresh.refreshAnimationView.StaticRefreshAnimationView
     android:id="@+id/animation_view"
     android:layout_width="match_parent"
     android:layout_height="3dp"
